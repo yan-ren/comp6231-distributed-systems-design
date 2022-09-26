@@ -1,3 +1,5 @@
+from concurrent.futures import thread
+from multiprocessing import Process
 import socket
 import random
 from threading import Thread
@@ -6,8 +8,9 @@ import shutil
 from pathlib import Path
 from base64 import b64encode
 
-
 BUFFER_SIZE = 1024
+TOKEN_SIZE = 8
+
 
 def get_working_directory_info(working_directory):
     """
@@ -27,10 +30,10 @@ def generate_random_eof_token():
      Examples: '<1f56xc5d>', '<KfOVnVMV>'
      return: the generated token.
      """
-    return str.encode('<') + b64encode(os.urandom(10))[:8] + str.encode('>')
+    return str.encode('<') + b64encode(os.urandom(TOKEN_SIZE))[:TOKEN_SIZE] + str.encode('>')
 
 
-def receive_message_ending_with_token(active_socket, buffer_size, eof_token):
+def receive_message_ending_with_token(active_socket: socket.socket, buffer_size: int, eof_token: bytes):
     """
     Same implementation as in receive_message_ending_with_token() in client.py
     A helper method to receives a bytearray message of arbitrary size sent on the socket.
@@ -41,10 +44,10 @@ def receive_message_ending_with_token(active_socket, buffer_size, eof_token):
     :return: a bytearray message with the eof_token stripped from the end.
     """
     data = bytearray()
-    while True:                             # keep receiving until we get eof_token
+    while True:  # keep receiving until we get eof_token
         packet = active_socket.recv(buffer_size)
         data.extend(packet)
-        if packet.decode()[-len(eof_token):] == eof_token:
+        if packet[-len(eof_token):] == eof_token:
             data = data[:-len(eof_token)]
             break
 
@@ -59,7 +62,20 @@ def handle_cd(current_working_directory, new_working_directory):
     :param new_working_directory: name of the sub directory or '..' for parent
     :return: absolute path of new current working directory
     """
-    raise NotImplementedError('Your implementation here.')
+    error = ""
+    try:
+        os.chdir(new_working_directory)
+        print("Current working directory: {0}".format(os.getcwd()))
+    except FileNotFoundError:
+        error = "Directory: {0} does not exist".format(new_working_directory)
+        print(error)
+    except NotADirectoryError:
+        error = "{0} is not a directory".format(new_working_directory)
+        print(error)
+    except PermissionError:
+        error = "You do not have permissions to change to {0}".format(new_working_directory)
+        print(error)
+    return os.getcwd(), error
 
 
 def handle_mkdir(current_working_directory, directory_name):
@@ -68,7 +84,12 @@ def handle_mkdir(current_working_directory, directory_name):
     :param current_working_directory: string of current working directory
     :param directory_name: name of new sub directory
     """
-    raise NotImplementedError('Your implementation here.')
+    error = ''
+    try:
+        os.makedirs(directory_name)
+    except OSError:
+        error = OSError
+    return os.getcwd(), error
 
 
 def handle_rm(current_working_directory, object_name):
@@ -107,18 +128,18 @@ def handle_dl(current_working_directory, file_name, service_socket, eof_token):
 
 
 class ClientThread(Thread):
-    def __init__(self, service_socket : socket.socket, address : str):
+    def __init__(self, service_socket: socket.socket, address: str):
         Thread.__init__(self)
         self.service_socket = service_socket
         self.address = address
         self.cwd = os.getcwd()
-        self.eof_token = generate_random_eof_token().decode()
+        self.eof_token = generate_random_eof_token()
 
     def run(self):
-        print ("Connection from : ", self.address)
+        print("Connection from : ", self.address)
         # initialize the connection
         # send random eof token
-        self.service_socket.sendall(str.encode(self.eof_token))
+        self.service_socket.sendall(self.eof_token)
 
         # establish working directory
         # send the current dir info
@@ -126,19 +147,48 @@ class ClientThread(Thread):
 
         while True:
             # get the command and arguments and call the corresponding method
-            received = receive_message_ending_with_token(self.service_socket, BUFFER_SIZE, self.eof_token)
-            if received.decode() == 'exit':
+            received = receive_message_ending_with_token(self.service_socket, BUFFER_SIZE,
+                                                         self.eof_token).decode().strip()
+            if received == 'exit':
                 break
-            
-            # send current dir info
-            self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
+            elif received.startswith('cd'):
+                commands = received.split(" ")
+                if len(commands) != 2:
+                    self.service_socket.sendall(self.pack_msg('error: invalid cd command: ' + received))
+                else:
+                    self.cwd, error = handle_cd(self.cwd, commands[1])
+                    if error != '':
+                        self.service_socket.sendall(self.pack_msg(error))
+                    else:
+                        # send current dir info
+                        self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
+            elif received.startswith('mkdir'):
+                commands = received.split(" ")
+                if len(commands) != 2:
+                    self.service_socket.sendall(self.pack_msg('error: invalid mkdir command: ' + received))
+                else:
+                    self.cwd, error = handle_mkdir(self.cwd, commands[1])
+                    if error != '':
+                        self.service_socket.sendall(self.pack_msg(error))
+                    else:
+                        # send current dir info
+                        self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
+            else:
+                self.service_socket.sendall(self.pack_msg('unknown command:' + received.decode()))
 
         print('Connection closed from:', self.address)
 
     def pack_msg(self, msg: str):
-        return str.encode(msg) + str.encode(self.eof_token)
+        return str.encode(msg) + self.eof_token
+
 
 def main():
+    def task(scoket, address):
+        new_thread = ClientThread(scoket, address)
+        new_thread.daemon = True
+        new_thread.start()
+        new_thread.join()
+
     HOST = "127.0.0.1"
     PORT = 65432
 
@@ -150,14 +200,12 @@ def main():
             try:
                 s.listen()
                 c_socket, c_address = s.accept()
-                new_thread = ClientThread(c_socket, c_address)
-                new_thread.daemon = True
-                new_thread.start()
+                p = Process(target=task, args=(c_socket, c_address), daemon=True)
+                p.start()
             except KeyboardInterrupt:
                 print("server closed with KeyboardInterrupt!")
                 break
 
+
 if __name__ == '__main__':
     main()
-
-

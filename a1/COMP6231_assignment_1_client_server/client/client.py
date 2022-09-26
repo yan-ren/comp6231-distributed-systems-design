@@ -1,8 +1,8 @@
 import socket
 
-
 EOF_TOKEN_SIZE = 10
 BUFFER_SIZE = 1024
+
 
 def receive_message_ending_with_token(active_socket, buffer_size, eof_token):
     """
@@ -15,10 +15,10 @@ def receive_message_ending_with_token(active_socket, buffer_size, eof_token):
     :return: a bytearray message with the eof_token stripped from the end.
     """
     data = bytearray()
-    while True:                             # keep receiving until we get eof_token
+    while True:  # keep receiving until we get eof_token
         packet = active_socket.recv(buffer_size)
         data.extend(packet)
-        if packet.decode()[-len(eof_token):] == eof_token:
+        if packet[-len(eof_token):] == eof_token:
             data = data[:-len(eof_token)]
             break
 
@@ -35,8 +35,9 @@ def initialize(host, port):
     :param port: the port number of the server
     :return: the created socket object
     """
-    
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((host, port))
     print('Connected to server at IP:', host, 'and Port:', port)
 
@@ -45,7 +46,6 @@ def initialize(host, port):
         packet = s.recv(BUFFER_SIZE)
         eof_token.extend(packet)
         if len(eof_token) == EOF_TOKEN_SIZE:
-            eof_token = eof_token.decode()
             print('Handshake Done. EOF is:', eof_token)
             break
 
@@ -63,7 +63,9 @@ def issue_cd(command_and_arg, client_socket, eof_token):
     :param client_socket: the active client socket object.
     :param eof_token: a token to indicate the end of the message.
     """
-    raise NotImplementedError('Your implementation here.')
+    client_socket.sendall(pack_msg(command_and_arg, eof_token))
+    data = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
+    print(data.decode())
 
 
 def issue_mkdir(command_and_arg, client_socket, eof_token):
@@ -75,7 +77,9 @@ def issue_mkdir(command_and_arg, client_socket, eof_token):
     :param client_socket: the active client socket object.
     :param eof_token: a token to indicate the end of the message.
     """
-    raise NotImplementedError('Your implementation here.')
+    client_socket.sendall(pack_msg(command_and_arg, eof_token))
+    data = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
+    print(data.decode())
 
 
 def issue_rm(command_and_arg, client_socket, eof_token):
@@ -116,8 +120,8 @@ def issue_dl(command_and_arg, client_socket, eof_token):
     raise NotImplementedError('Your implementation here.')
 
 
-def pack_msg(msg: str, eof_token: str):
-    return str.encode(msg) + str.encode(eof_token)
+def pack_msg(msg: str, eof_token: bytes):
+    return str.encode(msg) + eof_token
 
 
 def main():
@@ -127,14 +131,22 @@ def main():
     # initialize
     s, eof_token = initialize(HOST, PORT)
     while True:
-        # get user input
-        user_input = input("$> ")
+        try:
+            # get user input
+            user_input = input("$> ").strip()
 
-        # call the corresponding command function or exit
-        if user_input == 'exit':
-            s.sendall(pack_msg(user_input, eof_token))
+            # call the corresponding command function or exit
+            if user_input == 'exit':
+                s.sendall(pack_msg(user_input, eof_token))
+                break
+            elif user_input.startswith('cd'):
+                issue_cd(user_input, s, eof_token)
+            elif user_input.startswith('mkdir'):
+                issue_mkdir(user_input, s, eof_token)
+
+        except KeyboardInterrupt:
+            print('client closed with KeyboardInterrupt!')
             break
-
     print('Exiting the application.')
 
 
