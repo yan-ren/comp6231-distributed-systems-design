@@ -4,7 +4,10 @@ from threading import Thread
 import os
 import shutil
 from pathlib import Path
+from base64 import b64encode
 
+
+BUFFER_SIZE = 1024
 
 def get_working_directory_info(working_directory):
     """
@@ -24,7 +27,7 @@ def generate_random_eof_token():
      Examples: '<1f56xc5d>', '<KfOVnVMV>'
      return: the generated token.
      """
-    raise NotImplementedError('Your implementation here.')
+    return str.encode('<') + b64encode(os.urandom(10))[:8] + str.encode('>')
 
 
 def receive_message_ending_with_token(active_socket, buffer_size, eof_token):
@@ -37,7 +40,15 @@ def receive_message_ending_with_token(active_socket, buffer_size, eof_token):
     :param eof_token: a token that denotes the end of the message.
     :return: a bytearray message with the eof_token stripped from the end.
     """
-    raise NotImplementedError('Your implementation here.')
+    data = bytearray()
+    while True:                             # keep receiving until we get eof_token
+        packet = active_socket.recv(buffer_size)
+        data.extend(packet)
+        if packet.decode()[-len(eof_token):] == eof_token:
+            data = data[:-len(eof_token)]
+            break
+
+    return data
 
 
 def handle_cd(current_working_directory, new_working_directory):
@@ -100,40 +111,51 @@ class ClientThread(Thread):
         Thread.__init__(self)
         self.service_socket = service_socket
         self.address = address
+        self.cwd = os.getcwd()
+        self.eof_token = generate_random_eof_token().decode()
 
     def run(self):
-        # print ("Connection from : ", self.address)
-        raise NotImplementedError('Your implementation here.')
-
+        print ("Connection from : ", self.address)
         # initialize the connection
         # send random eof token
-
-
+        self.service_socket.sendall(str.encode(self.eof_token))
 
         # establish working directory
-
-
         # send the current dir info
+        self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
 
-
-        # while True:
+        while True:
             # get the command and arguments and call the corresponding method
-
+            received = receive_message_ending_with_token(self.service_socket, BUFFER_SIZE, self.eof_token)
+            if received.decode() == 'exit':
+                break
+            
             # send current dir info
+            self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
 
+        print('Connection closed from:', self.address)
 
-        # print('Connection closed from:', self.address)
+    def pack_msg(self, msg: str):
+        return str.encode(msg) + str.encode(self.eof_token)
 
 def main():
     HOST = "127.0.0.1"
     PORT = 65432
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind((HOST, PORT))
-        s.listen()
-        raise NotImplementedError('Your implementation here.')
-
-
+        print("server started, waiting for client request...")
+        while True:
+            try:
+                s.listen()
+                c_socket, c_address = s.accept()
+                new_thread = ClientThread(c_socket, c_address)
+                new_thread.daemon = True
+                new_thread.start()
+            except KeyboardInterrupt:
+                print("server closed with KeyboardInterrupt!")
+                break
 
 if __name__ == '__main__':
     main()

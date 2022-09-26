@@ -1,6 +1,8 @@
 import socket
 
 
+EOF_TOKEN_SIZE = 10
+BUFFER_SIZE = 1024
 
 def receive_message_ending_with_token(active_socket, buffer_size, eof_token):
     """
@@ -12,7 +14,15 @@ def receive_message_ending_with_token(active_socket, buffer_size, eof_token):
     :param eof_token: a token that denotes the end of the message.
     :return: a bytearray message with the eof_token stripped from the end.
     """
-    raise NotImplementedError('Your implementation here.')
+    data = bytearray()
+    while True:                             # keep receiving until we get eof_token
+        packet = active_socket.recv(buffer_size)
+        data.extend(packet)
+        if packet.decode()[-len(eof_token):] == eof_token:
+            data = data[:-len(eof_token)]
+            break
+
+    return data
 
 
 def initialize(host, port):
@@ -25,13 +35,23 @@ def initialize(host, port):
     :param port: the port number of the server
     :return: the created socket object
     """
+    
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port))
+    print('Connected to server at IP:', host, 'and Port:', port)
 
-    # print('Connected to server at IP:', host, 'and Port:', port)
+    eof_token = bytearray()
+    while True:
+        packet = s.recv(BUFFER_SIZE)
+        eof_token.extend(packet)
+        if len(eof_token) == EOF_TOKEN_SIZE:
+            eof_token = eof_token.decode()
+            print('Handshake Done. EOF is:', eof_token)
+            break
 
-
-    # print('Handshake Done. EOF is:', eof_token)
-
-    raise NotImplementedError('Your implementation here.')
+    data = receive_message_ending_with_token(s, BUFFER_SIZE, eof_token)
+    print(data.decode())
+    return s, eof_token
 
 
 def issue_cd(command_and_arg, client_socket, eof_token):
@@ -96,21 +116,26 @@ def issue_dl(command_and_arg, client_socket, eof_token):
     raise NotImplementedError('Your implementation here.')
 
 
+def pack_msg(msg: str, eof_token: str):
+    return str.encode(msg) + str.encode(eof_token)
+
+
 def main():
     HOST = "127.0.0.1"  # The server's hostname or IP address
     PORT = 65432  # The port used by the server
 
-    raise NotImplementedError('Your implementation here.')
-
     # initialize
-
-    # while True:
+    s, eof_token = initialize(HOST, PORT)
+    while True:
         # get user input
+        user_input = input("$> ")
 
         # call the corresponding command function or exit
+        if user_input == 'exit':
+            s.sendall(pack_msg(user_input, eof_token))
+            break
 
-
-    # print('Exiting the application.')
+    print('Exiting the application.')
 
 
 if __name__ == '__main__':
