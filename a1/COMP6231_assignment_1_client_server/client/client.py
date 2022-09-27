@@ -91,7 +91,9 @@ def issue_rm(command_and_arg, client_socket, eof_token):
     :param client_socket: the active client socket object.
     :param eof_token: a token to indicate the end of the message.
     """
-    raise NotImplementedError('Your implementation here.')
+    client_socket.sendall(pack_msg(command_and_arg, eof_token))
+    data = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
+    print(data.decode())
 
 
 def issue_ul(command_and_arg, client_socket, eof_token):
@@ -143,6 +145,8 @@ def main():
                 issue_cd(user_input, s, eof_token)
             elif user_input.startswith('mkdir'):
                 issue_mkdir(user_input, s, eof_token)
+            elif user_input.startswith('rm'):
+                issue_rm(user_input, s, eof_token)
 
         except KeyboardInterrupt:
             print('client closed with KeyboardInterrupt!')

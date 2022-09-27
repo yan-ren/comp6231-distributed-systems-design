@@ -99,7 +99,14 @@ def handle_rm(current_working_directory, object_name):
     :param current_working_directory: string of current working directory
     :param object_name: name of sub directory or file to remove
     """
-    raise NotImplementedError('Your implementation here.')
+    if os.path.isdir(object_name):
+        shutil.rmtree(object_name)
+        return os.getcwd(), ''
+    elif os.path.isfile(object_name):
+        os.remove(object_name)
+        return os.getcwd(), ''
+    else:
+        return os.getcwd(), 'object: ' + object_name + ' does not exist'
 
 
 def handle_ul(current_working_directory, file_name, service_socket, eof_token):
@@ -173,6 +180,17 @@ class ClientThread(Thread):
                     else:
                         # send current dir info
                         self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
+            elif received.startswith('rm'):
+                commands = received.split(" ")
+                if len(commands) != 2:
+                    self.service_socket.sendall(self.pack_msg('error: invalid rm command: ' + received))
+                else:
+                    self.cwd, error = handle_rm(self.cwd, commands[1])
+                    if error != '':
+                        self.service_socket.sendall(self.pack_msg(error))
+                    else:
+                        # send current dir info
+                        self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
             else:
                 self.service_socket.sendall(self.pack_msg('unknown command:' + received.decode()))
 
@@ -183,8 +201,8 @@ class ClientThread(Thread):
 
 
 def main():
-    def task(scoket, address):
-        new_thread = ClientThread(scoket, address)
+    def task(socket, address):
+        new_thread = ClientThread(socket, address)
         new_thread.daemon = True
         new_thread.start()
         new_thread.join()
