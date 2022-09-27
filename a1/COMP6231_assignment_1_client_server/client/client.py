@@ -105,7 +105,30 @@ def issue_ul(command_and_arg, client_socket, eof_token):
     :param client_socket: the active client socket object.
     :param eof_token: a token to indicate the end of the message.
     """
-    raise NotImplementedError('Your implementation here.')
+    args = command_and_arg.split(' ')
+    if len(args) != 2:
+        print('invalid ul command: ' + command_and_arg + " , missing arguments")
+        return
+
+    try:
+        file = open(args[1], 'r')
+        data = file.read()
+    except OSError:
+        print('could not open/read file ' + args[1] + ', error:' + OSError)
+        return
+    finally:
+        file.close()
+
+    # sending the filename
+    client_socket.sendall(pack_msg(command_and_arg, eof_token))
+    # get response
+    resp = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
+    print(resp.decode())
+    # sending the file
+    client_socket.sendall(pack_msg(data, eof_token))
+    # get response
+    resp = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
+    print(resp.decode())
 
 
 def issue_dl(command_and_arg, client_socket, eof_token):
@@ -147,7 +170,16 @@ def main():
                 issue_mkdir(user_input, s, eof_token)
             elif user_input.startswith('rm'):
                 issue_rm(user_input, s, eof_token)
-
+            elif user_input.startswith('ls'):
+                s.sendall(pack_msg(user_input, eof_token))
+                data = receive_message_ending_with_token(s, BUFFER_SIZE, eof_token)
+                print(data.decode())
+            elif user_input.startswith('ul'):
+                issue_ul(user_input, s, eof_token)
+            elif user_input.startswith('dl'):
+                issue_dl(user_input, s, eof_token)
+            else:
+                print('unknown command: ' + user_input)
         except KeyboardInterrupt:
             print('client closed with KeyboardInterrupt!')
             break

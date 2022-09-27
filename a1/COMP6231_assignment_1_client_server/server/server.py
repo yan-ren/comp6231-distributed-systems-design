@@ -119,7 +119,29 @@ def handle_ul(current_working_directory, file_name, service_socket, eof_token):
     :param service_socket: active socket with the client to read the payload/contents from.
     :param eof_token: a token to indicate the end of the message.
     """
-    raise NotImplementedError('Your implementation here.')
+    commands = file_name.split(" ")
+    if len(commands) != 2:
+        service_socket.sendall(pack_msg('error: invalid ul command: ' + file_name, eof_token))
+        return
+
+    # response the file name
+    service_socket.sendall(pack_msg('server received the file name: ' + commands[1], eof_token))
+    print('start receiving file: ' + commands[1])
+
+    # receive the file content
+    data = receive_message_ending_with_token(service_socket, BUFFER_SIZE, eof_token)
+    print('file transmission done')
+    try:
+        file = open(commands[1], 'w')
+        file.write(data.decode())
+        print('successfully saved file ' + file.name)
+    except OSError:
+        print(OSError)
+        return
+    finally:
+        file.close()
+    # send current dir info
+    service_socket.sendall(pack_msg(get_working_directory_info(current_working_directory), eof_token))
 
 
 def handle_dl(current_working_directory, file_name, service_socket, eof_token):
@@ -191,13 +213,21 @@ class ClientThread(Thread):
                     else:
                         # send current dir info
                         self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
+            elif received.startswith('ls'):
+                self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
+            elif received.startswith('ul'):
+                handle_ul(self.cwd, received, self.service_socket, self.eof_token)
             else:
-                self.service_socket.sendall(self.pack_msg('unknown command:' + received.decode()))
+                self.service_socket.sendall(self.pack_msg('unknown command:' + received))
 
         print('Connection closed from:', self.address)
 
     def pack_msg(self, msg: str):
         return str.encode(msg) + self.eof_token
+
+
+def pack_msg(msg: str, eof_token: bytes):
+    return str.encode(msg) + eof_token
 
 
 def main():
