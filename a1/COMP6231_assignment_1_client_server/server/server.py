@@ -63,18 +63,21 @@ def handle_cd(current_working_directory, new_working_directory):
     :return: absolute path of new current working directory
     """
     error = ""
-    try:
-        os.chdir(new_working_directory)
-        print("Current working directory: {0}".format(os.getcwd()))
-    except FileNotFoundError:
-        error = "Directory: {0} does not exist".format(new_working_directory)
-        print(error)
-    except NotADirectoryError:
-        error = "{0} is not a directory".format(new_working_directory)
-        print(error)
-    except PermissionError:
-        error = "You do not have permissions to change to {0}".format(new_working_directory)
-        print(error)
+    commands = new_working_directory.split(" ")
+    if len(commands) != 2:
+        error = f'error: invalid cd command: {new_working_directory}'
+        return current_working_directory, error
+    else:
+        try:
+            os.chdir(commands[1])
+            print("Current working directory: {0}".format(os.getcwd()))
+        except FileNotFoundError:
+            error = "error: directory: {0} does not exist".format(commands[1])
+        except NotADirectoryError:
+            error = "error: {0} is not a directory".format(commands[1])
+        except PermissionError:
+            error = "error: you do not have permissions to change to {0}".format(commands[1])
+
     return os.getcwd(), error
 
 
@@ -85,8 +88,13 @@ def handle_mkdir(current_working_directory, directory_name):
     :param directory_name: name of new sub directory
     """
     error = ''
+    commands = directory_name.split(' ')
+    if len(commands) != 2:
+        error = f'error: invalid mkdir command: {directory_name}'
+        return current_working_directory, error
+
     try:
-        os.makedirs(directory_name)
+        os.makedirs(commands[1])
     except OSError:
         error = OSError
     return os.getcwd(), error
@@ -99,14 +107,20 @@ def handle_rm(current_working_directory, object_name):
     :param current_working_directory: string of current working directory
     :param object_name: name of sub directory or file to remove
     """
-    if os.path.isdir(object_name):
-        shutil.rmtree(object_name)
-        return os.getcwd(), ''
-    elif os.path.isfile(object_name):
-        os.remove(object_name)
-        return os.getcwd(), ''
+    commands = object_name.split(" ")
+    error = ''
+    if len(commands) != 2:
+        error = f'error: invalid rm command: {object_name}'
+        return current_working_directory, error
+
+    if os.path.isdir(commands[1]):
+        shutil.rmtree(commands[1])
+    elif os.path.isfile(commands[1]):
+        os.remove(commands[1])
     else:
-        return os.getcwd(), 'object: ' + object_name + ' does not exist'
+        error = 'error: object ' + commands[1] + ' does not exist'
+
+    return os.getcwd(), error
 
 
 def handle_ul(current_working_directory, file_name, service_socket, eof_token):
@@ -153,7 +167,30 @@ def handle_dl(current_working_directory, file_name, service_socket, eof_token):
     :param service_socket: active service socket with the client
     :param eof_token: a token to indicate the end of the message.
     """
-    raise NotImplementedError('Your implementation here.')
+    args = file_name.split(" ")
+    if len(args) != 2:
+        service_socket.sendall(pack_msg('error: invalid dl command: ' + file_name, eof_token))
+        return
+
+    #   open file and read
+    try:
+        file = open(args[1], 'r')
+        data = file.read()
+    except OSError:
+        error = 'error: could not open/read file ' + args[1] + ', error:' + OSError
+        service_socket.sendall(pack_msg(error, eof_token))
+        print(error)
+        return
+    finally:
+        file.close()
+
+    # sending the file
+    service_socket.sendall(pack_msg(data, eof_token))
+    # get response
+    resp = receive_message_ending_with_token(service_socket, BUFFER_SIZE, eof_token)
+    print(f'received from {str(service_socket.getpeername())}: {resp.decode()}')
+    # send current dir info
+    service_socket.sendall(pack_msg(get_working_directory_info(current_working_directory), eof_token))
 
 
 class ClientThread(Thread):
@@ -176,49 +213,41 @@ class ClientThread(Thread):
 
         while True:
             # get the command and arguments and call the corresponding method
-            received = receive_message_ending_with_token(self.service_socket, BUFFER_SIZE,
-                                                         self.eof_token).decode().strip()
-            if received == 'exit':
+            request = receive_message_ending_with_token(self.service_socket, BUFFER_SIZE,
+                                                        self.eof_token).decode().strip()
+            if request == 'exit':
                 break
-            elif received.startswith('cd'):
-                commands = received.split(" ")
-                if len(commands) != 2:
-                    self.service_socket.sendall(self.pack_msg('error: invalid cd command: ' + received))
+            elif request.startswith('cd'):
+                self.cwd, error = handle_cd(self.cwd, request)
+                if error != '':
+                    print(error)
+                    self.service_socket.sendall(self.pack_msg(error))
                 else:
-                    self.cwd, error = handle_cd(self.cwd, commands[1])
-                    if error != '':
-                        self.service_socket.sendall(self.pack_msg(error))
-                    else:
-                        # send current dir info
-                        self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
-            elif received.startswith('mkdir'):
-                commands = received.split(" ")
-                if len(commands) != 2:
-                    self.service_socket.sendall(self.pack_msg('error: invalid mkdir command: ' + received))
+                    # send current dir info
+                    self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
+            elif request.startswith('mkdir'):
+                self.cwd, error = handle_mkdir(self.cwd, request)
+                if error != '':
+                    print(error)
+                    self.service_socket.sendall(self.pack_msg(error))
                 else:
-                    self.cwd, error = handle_mkdir(self.cwd, commands[1])
-                    if error != '':
-                        self.service_socket.sendall(self.pack_msg(error))
-                    else:
-                        # send current dir info
-                        self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
-            elif received.startswith('rm'):
-                commands = received.split(" ")
-                if len(commands) != 2:
-                    self.service_socket.sendall(self.pack_msg('error: invalid rm command: ' + received))
+                    # send current dir info
+                    self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
+            elif request.startswith('rm'):
+                self.cwd, error = handle_rm(self.cwd, request)
+                if error != '':
+                    self.service_socket.sendall(self.pack_msg(error))
                 else:
-                    self.cwd, error = handle_rm(self.cwd, commands[1])
-                    if error != '':
-                        self.service_socket.sendall(self.pack_msg(error))
-                    else:
-                        # send current dir info
-                        self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
-            elif received.startswith('ls'):
+                    # send current dir info
+                    self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
+            elif request.startswith('ls'):
                 self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
-            elif received.startswith('ul'):
-                handle_ul(self.cwd, received, self.service_socket, self.eof_token)
+            elif request.startswith('ul'):
+                handle_ul(self.cwd, request, self.service_socket, self.eof_token)
+            elif request.startswith('dl'):
+                handle_dl(self.cwd, request, self.service_socket, self.eof_token)
             else:
-                self.service_socket.sendall(self.pack_msg('unknown command:' + received))
+                self.service_socket.sendall(self.pack_msg('unknown command:' + request))
 
         print('Connection closed from:', self.address)
 

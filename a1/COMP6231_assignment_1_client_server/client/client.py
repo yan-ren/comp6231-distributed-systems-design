@@ -142,7 +142,36 @@ def issue_dl(command_and_arg, client_socket, eof_token):
     :param eof_token: a token to indicate the end of the message.
     :return:
     """
-    raise NotImplementedError('Your implementation here.')
+    args = command_and_arg.split(' ')
+    if len(args) != 2:
+        print('invalid dl command: ' + command_and_arg + " , missing arguments")
+        return
+
+    # sending the dl command and file name
+    client_socket.sendall(pack_msg(command_and_arg, eof_token))
+    print('requesting file: ' + args[1])
+    # get response
+    resp = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
+    if resp.decode().startswith('error'):
+        print(resp.decode())
+        return
+
+    # save file
+    try:
+        file = open(args[1], 'w')
+        file.write(resp.decode())
+        print('successfully saved file ' + file.name)
+    except OSError:
+        print(OSError)
+        return
+    finally:
+        file.close()
+
+    # send
+    client_socket.sendall(pack_msg('done', eof_token))
+    # get response
+    resp = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
+    print(resp.decode())
 
 
 def pack_msg(msg: str, eof_token: bytes):
