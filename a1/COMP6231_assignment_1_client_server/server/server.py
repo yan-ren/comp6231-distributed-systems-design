@@ -140,20 +140,20 @@ def handle_ul(current_working_directory, file_name, service_socket, eof_token):
 
     # response the file name
     service_socket.sendall(pack_msg('server received the file name: ' + commands[1], eof_token))
-    print('start receiving file: ' + commands[1])
+    print(f'start receiving file:{commands[1]} from {str(service_socket.getpeername())}')
 
     # receive the file content
     data = receive_message_ending_with_token(service_socket, BUFFER_SIZE, eof_token)
     print('file transmission done')
     try:
-        file = open(commands[1], 'w')
-        file.write(data.decode())
-        print('successfully saved file ' + file.name)
+        file = open(commands[1], 'wb')
+        file.write(data)
+        file.close()
+        print('successfully saved file:' + file.name)
     except OSError:
         print(OSError)
         return
-    finally:
-        file.close()
+        
     # send current dir info
     service_socket.sendall(pack_msg(get_working_directory_info(current_working_directory), eof_token))
 
@@ -172,23 +172,28 @@ def handle_dl(current_working_directory, file_name, service_socket, eof_token):
         service_socket.sendall(pack_msg('error: invalid dl command: ' + file_name, eof_token))
         return
 
-    #   open file and read
+    print(f'received from {str(service_socket.getpeername())} requesting file: {args[1]}')
+    
+    # open file and read
     try:
-        file = open(args[1], 'r')
+        file = open(args[1], 'rb')
         data = file.read()
+        file.close()
     except OSError:
-        error = 'error: could not open/read file ' + args[1] + ', error:' + OSError
+        error = 'error: could not open/read file ' + args[1] + ', error:' + str(OSError)
         service_socket.sendall(pack_msg(error, eof_token))
         print(error)
         return
-    finally:
-        file.close()
 
+    # send ready to send
+    service_socket.sendall(pack_msg('ready', eof_token))
+    # response
+    resp = receive_message_ending_with_token(service_socket, BUFFER_SIZE, eof_token)
     # sending the file
-    service_socket.sendall(pack_msg(data, eof_token))
+    service_socket.sendall(data+eof_token)
     # get response
     resp = receive_message_ending_with_token(service_socket, BUFFER_SIZE, eof_token)
-    print(f'received from {str(service_socket.getpeername())}: {resp.decode()}')
+    print(f'received from {str(service_socket.getpeername())} file transmission: {resp.decode()}')
     # send current dir info
     service_socket.sendall(pack_msg(get_working_directory_info(current_working_directory), eof_token))
 

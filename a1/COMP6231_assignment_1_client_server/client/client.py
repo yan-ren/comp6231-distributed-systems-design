@@ -111,13 +111,12 @@ def issue_ul(command_and_arg, client_socket, eof_token):
         return
 
     try:
-        file = open(args[1], 'r')
+        file = open(args[1], 'rb')
         data = file.read()
-    except OSError:
-        print('could not open/read file ' + args[1] + ', error:' + OSError)
-        return
-    finally:
         file.close()
+    except OSError:
+        print('could not open/read file ' + args[1] + ', error:' + str(OSError))
+        return
 
     # sending the filename
     client_socket.sendall(pack_msg(command_and_arg, eof_token))
@@ -125,7 +124,7 @@ def issue_ul(command_and_arg, client_socket, eof_token):
     resp = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
     print(resp.decode())
     # sending the file
-    client_socket.sendall(pack_msg(data, eof_token))
+    client_socket.sendall(data+eof_token)
     # get response
     resp = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
     print(resp.decode())
@@ -156,19 +155,24 @@ def issue_dl(command_and_arg, client_socket, eof_token):
         print(resp.decode())
         return
 
+    # send request
+    client_socket.sendall(pack_msg('ok', eof_token))
+
+    # receive file
+    resp = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
+
     # save file
     try:
-        file = open(args[1], 'w')
-        file.write(resp.decode())
+        file = open(args[1], 'wb')
+        file.write(resp)
+        file.close()
         print('successfully saved file ' + file.name)
     except OSError:
         print(OSError)
         return
-    finally:
-        file.close()
 
     # send
-    client_socket.sendall(pack_msg('done', eof_token))
+    client_socket.sendall(pack_msg('ok', eof_token))
     # get response
     resp = receive_message_ending_with_token(client_socket, BUFFER_SIZE, eof_token)
     print(resp.decode())
