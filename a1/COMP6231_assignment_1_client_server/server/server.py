@@ -95,8 +95,8 @@ def handle_mkdir(current_working_directory, directory_name):
 
     try:
         os.makedirs(commands[1])
-    except OSError:
-        error = OSError
+    except OSError as e:
+        error = e
     return os.getcwd(), error
 
 
@@ -150,8 +150,8 @@ def handle_ul(current_working_directory, file_name, service_socket, eof_token):
         file.write(data)
         file.close()
         print('successfully saved file:' + file.name)
-    except OSError:
-        print(OSError)
+    except OSError as e:
+        print(e)
         return
         
     # send current dir info
@@ -179,8 +179,8 @@ def handle_dl(current_working_directory, file_name, service_socket, eof_token):
         file = open(args[1], 'rb')
         data = file.read()
         file.close()
-    except OSError:
-        error = 'error: could not open/read file ' + args[1] + ', error:' + str(OSError)
+    except OSError as e:
+        error = 'error: could not open/read file ' + args[1] + ', error:' + str(e)
         service_socket.sendall(pack_msg(error, eof_token))
         print(error)
         return
@@ -226,7 +226,7 @@ class ClientThread(Thread):
                 self.cwd, error = handle_cd(self.cwd, request)
                 if error != '':
                     print(error)
-                    self.service_socket.sendall(self.pack_msg(error))
+                    self.service_socket.sendall(self.pack_msg(str(error)))
                 else:
                     # send current dir info
                     self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
@@ -234,14 +234,14 @@ class ClientThread(Thread):
                 self.cwd, error = handle_mkdir(self.cwd, request)
                 if error != '':
                     print(error)
-                    self.service_socket.sendall(self.pack_msg(error))
+                    self.service_socket.sendall(self.pack_msg(str(error)))
                 else:
                     # send current dir info
                     self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))
             elif request.startswith('rm'):
                 self.cwd, error = handle_rm(self.cwd, request)
                 if error != '':
-                    self.service_socket.sendall(self.pack_msg(error))
+                    self.service_socket.sendall(self.pack_msg(str(error)))
                 else:
                     # send current dir info
                     self.service_socket.sendall(self.pack_msg(get_working_directory_info(self.cwd)))

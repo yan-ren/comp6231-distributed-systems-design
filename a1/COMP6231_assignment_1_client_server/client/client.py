@@ -114,8 +114,8 @@ def issue_ul(command_and_arg, client_socket, eof_token):
         file = open(args[1], 'rb')
         data = file.read()
         file.close()
-    except OSError:
-        print('could not open/read file ' + args[1] + ', error:' + str(OSError))
+    except OSError as e:
+        print('could not open/read file ' + args[1] + ', error:' + str(e))
         return
 
     # sending the filename
@@ -167,8 +167,8 @@ def issue_dl(command_and_arg, client_socket, eof_token):
         file.write(resp)
         file.close()
         print('successfully saved file ' + file.name)
-    except OSError:
-        print(OSError)
+    except OSError as e:
+        print(e)
         return
 
     # send
