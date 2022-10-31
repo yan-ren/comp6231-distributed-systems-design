@@ -20,7 +20,7 @@ def task(data: pd.DataFrame):
 def load_data_in_chunks(data: str, chucks: int = 4) -> list:
     df = pd.read_csv(data)
     return np.array_split(df, chucks)
-
+0
 
 def reduce_task(mapping_output: list):
     reduce_out = {}

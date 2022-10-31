@@ -12,7 +12,6 @@ import pandas as pd
 
 
 def task(data: pd.DataFrame):
-    # print(data.dtypes)
     data = data[data['DepTime'].isnull()]
     return data['FlightDate']
 
