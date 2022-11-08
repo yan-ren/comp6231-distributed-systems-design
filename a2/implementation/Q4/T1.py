@@ -6,6 +6,7 @@ header
 FlightDate,Airline,Origin,Dest,Cancelled,Diverted,CRSDepTime,DepTime,DepDelayMinutes,DepDelay,ArrTime,ArrDelayMinutes,AirTime,CRSElapsedTime,ActualElapsedTime,Distance,Year,Quarter,Month,DayofMonth,DayOfWeek,Marketing_Airline_Network,Operated_or_Branded_Code_Share_Partners,DOT_ID_Marketing_Airline,IATA_Code_Marketing_Airline,Flight_Number_Marketing_Airline,Operating_Airline,DOT_ID_Operating_Airline,IATA_Code_Operating_Airline,Tail_Number,Flight_Number_Operating_Airline,OriginAirportID,OriginAirportSeqID,OriginCityMarketID,OriginCityName,OriginState,OriginStateFips,OriginStateName,OriginWac,DestAirportID,DestAirportSeqID,DestCityMarketID,DestCityName,DestState,DestStateFips,DestStateName,DestWac,DepDel15,DepartureDelayGroups,DepTimeBlk,TaxiOut,WheelsOff,WheelsOn,TaxiIn,CRSArrTime,ArrDelay,ArrDel15,ArrivalDelayGroups,ArrTimeBlk,DistanceGroup,DivAirportLandings
 '''
 import concurrent.futures
+import time
 
 import numpy as np
 import pandas as pd
@@ -22,14 +23,18 @@ def load_data_in_chunks(data: str, chucks: int = 4) -> list:
 
 
 def reduce_task(mapping_output: list):
-    dfObj = pd.DataFrame()
+    df = pd.DataFrame()
     for out in mapping_output:
-        dfObj = pd.concat([dfObj, out])
+        df = pd.concat([df, out])
 
-    print('Date missing departure time', dfObj)
+    df.reset_index(drop=True, inplace=True)
+    df.drop_duplicates(ignore_index=True, inplace=True)
+    print('Date missing departure time', df)
 
 
 if __name__ == '__main__':
+    start_time = time.time()
+
     threads = 10
     data_frame = load_data_in_chunks('../datasets/Combined_Flights_2021.csv', threads)
     results = []
@@ -39,3 +44,4 @@ if __name__ == '__main__':
             results.append(future.result())
 
     reduce_task(results)
+    print("--- %s seconds ---" % (time.time() - start_time))

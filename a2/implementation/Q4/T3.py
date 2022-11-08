@@ -1,3 +1,5 @@
+import time
+
 import pandas as pd
 import numpy as np
 from mpi4py import MPI
@@ -19,11 +21,15 @@ if rank == 0:
 
 
     def reduce_task(mapping_output: list):
-        df_obj = pd.DataFrame()
+        df = pd.DataFrame()
         for out in mapping_output:
-            df_obj = pd.concat([df_obj, out])
-        print('Date missing departure time', df_obj)
+            df = pd.concat([df, out])
 
+        df.reset_index(drop=True, inplace=True)
+        df.drop_duplicates(ignore_index=True, inplace=True)
+        print('Date missing departure time', df)
+
+    start_time = time.time()
 
     slave_workers = size - 1
     chunk_distribution = load_data_in_chunks(dataset, slave_workers)
@@ -41,6 +47,7 @@ if rank == 0:
         print(f'received from Worker slave {worker}')
 
     reduce_task(results)
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
 elif rank > 0:

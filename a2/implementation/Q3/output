@@ -1,0 +1,216 @@
+run with 3 workers
+Worker slave 1 is done. Sending back to master
+received from Worker slave 1
+Worker slave 2 is done. Sending back to master
+received from Worker slave 2
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 126.87347102165222 seconds ---
+run with 4 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+Worker slave 3 is done. Sending back to master
+received from Worker slave 3
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 131.32168102264404 seconds ---
+run with 5 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+Worker slave 3 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+received from Worker slave 3
+Worker slave 4 is done. Sending back to master
+received from Worker slave 4
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 130.48831701278687 seconds ---
+run with 6 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+Worker slave 3 is done. Sending back to master
+Worker slave 4 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+received from Worker slave 3
+received from Worker slave 4
+Worker slave 5 is done. Sending back to master
+received from Worker slave 5
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 124.84794402122498 seconds ---
+run with 7 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+Worker slave 3 is done. Sending back to master
+Worker slave 4 is done. Sending back to master
+Worker slave 5 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+received from Worker slave 3
+received from Worker slave 4
+received from Worker slave 5
+Worker slave 6 is done. Sending back to master
+received from Worker slave 6
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 141.5782389640808 seconds ---
+run with 8 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+Worker slave 3 is done. Sending back to master
+Worker slave 4 is done. Sending back to master
+Worker slave 5 is done. Sending back to master
+Worker slave 6 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+received from Worker slave 3
+received from Worker slave 4
+received from Worker slave 5
+received from Worker slave 6
+Worker slave 7 is done. Sending back to master
+received from Worker slave 7
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 169.0349099636078 seconds ---
+run with 9 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+Worker slave 3 is done. Sending back to master
+Worker slave 4 is done. Sending back to master
+Worker slave 5 is done. Sending back to master
+Worker slave 6 is done. Sending back to master
+Worker slave 7 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+received from Worker slave 3
+received from Worker slave 4
+received from Worker slave 5
+received from Worker slave 6
+received from Worker slave 7
+Worker slave 8 is done. Sending back to master
+received from Worker slave 8
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 141.8118736743927 seconds ---
+run with 10 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+Worker slave 3 is done. Sending back to master
+Worker slave 4 is done. Sending back to master
+Worker slave 5 is done. Sending back to master
+Worker slave 6 is done. Sending back to master
+Worker slave 7 is done. Sending back to master
+Worker slave 8 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+received from Worker slave 3
+received from Worker slave 4
+received from Worker slave 5
+received from Worker slave 6
+received from Worker slave 7
+received from Worker slave 8
+Worker slave 9 is done. Sending back to master
+received from Worker slave 9
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 162.03946590423584 seconds ---
+run with 11 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+Worker slave 3 is done. Sending back to master
+Worker slave 4 is done. Sending back to master
+Worker slave 5 is done. Sending back to master
+Worker slave 6 is done. Sending back to master
+Worker slave 7 is done. Sending back to master
+Worker slave 8 is done. Sending back to master
+Worker slave 9 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+received from Worker slave 3
+received from Worker slave 4
+received from Worker slave 5
+received from Worker slave 6
+received from Worker slave 7
+received from Worker slave 8
+received from Worker slave 9
+Worker slave 10 is done. Sending back to master
+received from Worker slave 10
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 175.4307153224945 seconds ---
+run with 12 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+Worker slave 3 is done. Sending back to master
+Worker slave 4 is done. Sending back to master
+Worker slave 5 is done. Sending back to master
+Worker slave 6 is done. Sending back to master
+Worker slave 7 is done. Sending back to master
+Worker slave 8 is done. Sending back to master
+Worker slave 9 is done. Sending back to master
+Worker slave 10 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+received from Worker slave 3
+received from Worker slave 4
+received from Worker slave 5
+received from Worker slave 6
+received from Worker slave 7
+received from Worker slave 8
+received from Worker slave 9
+received from Worker slave 10
+Worker slave 11 is done. Sending back to master
+received from Worker slave 11
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 199.14872694015503 seconds ---
+run with 13 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+Worker slave 3 is done. Sending back to master
+Worker slave 4 is done. Sending back to master
+Worker slave 5 is done. Sending back to master
+Worker slave 6 is done. Sending back to master
+Worker slave 7 is done. Sending back to master
+Worker slave 8 is done. Sending back to master
+Worker slave 9 is done. Sending back to master
+Worker slave 10 is done. Sending back to master
+Worker slave 11 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+received from Worker slave 3
+received from Worker slave 4
+received from Worker slave 5
+received from Worker slave 6
+received from Worker slave 7
+received from Worker slave 8
+received from Worker slave 9
+received from Worker slave 10
+received from Worker slave 11
+Worker slave 12 is done. Sending back to master
+received from Worker slave 12
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 173.5415759086609 seconds ---
+run with 14 workers
+Worker slave 1 is done. Sending back to master
+Worker slave 2 is done. Sending back to master
+Worker slave 3 is done. Sending back to master
+Worker slave 4 is done. Sending back to master
+Worker slave 5 is done. Sending back to master
+Worker slave 6 is done. Sending back to master
+Worker slave 7 is done. Sending back to master
+Worker slave 8 is done. Sending back to master
+Worker slave 9 is done. Sending back to master
+Worker slave 10 is done. Sending back to master
+Worker slave 11 is done. Sending back to master
+Worker slave 12 is done. Sending back to master
+received from Worker slave 1
+received from Worker slave 2
+received from Worker slave 3
+received from Worker slave 4
+received from Worker slave 5
+received from Worker slave 6
+received from Worker slave 7
+received from Worker slave 8
+received from Worker slave 9
+received from Worker slave 10
+received from Worker slave 11
+received from Worker slave 12
+Worker slave 13 is done. Sending back to master
+received from Worker slave 13
+Average airtime for flights that were flying from Nashville to Chicago: 70.50404312668464
+--- 188.220281124115 seconds ---

@@ -1,3 +1,5 @@
+import time
+
 import pandas as pd
 import numpy as np
 from mpi4py import MPI
@@ -27,6 +29,7 @@ if rank == 0:
                 total_time += value
         print('Average airtime for flights that were flying from Nashville to Chicago:', total_time / total_count)
 
+    start_time = time.time()
 
     slave_workers = size - 1
     chunk_distribution = load_data_in_chunks(dataset, slave_workers)
@@ -44,11 +47,12 @@ if rank == 0:
         print(f'received from Worker slave {worker}')
 
     reduce_task(results)
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
 elif rank > 0:
     data = comm.recv()
-    print(f'Worker {rank} is assigned chunk {data.size} {dataset}')
+    # print(f'Worker {rank} is assigned chunk {data.size} {dataset}')
     data = data[(data['OriginCityName'] == 'Nashville, TN') & (data['DestCityName'] == 'Chicago, IL')]
     result = {len(data.index): data['AirTime'].sum()}
     print(f'Worker slave {rank} is done. Sending back to master')
