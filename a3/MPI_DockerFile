@@ -1,0 +1,24 @@
+FROM continuumio/conda-ci-linux-64-python3.8
+
+RUN sudo apt update
+
+RUN sudo apt install -y mpich nano
+
+RUN . /opt/conda/etc/profile.d/conda.sh && conda init bash
+
+RUN . /opt/conda/etc/profile.d/conda.sh && \
+    conda create -y -n comp6231 python=3.8 && \
+    . /opt/conda/etc/profile.d/conda.sh && \
+    conda activate comp6231 && \
+    conda install -y -c conda-forge openmpi tqdm pandas jupyter && \
+    pip install mpi4py
+
+RUN mkdir /home/test_user/lab4
+
+RUN echo "from mpi4py import MPI\n\
+    import os\n\
+    comm = MPI.COMM_WORLD # instantiate communication world\n\
+    size = comm.Get_size() # get size of communication world\n\
+    rank = comm.Get_rank() # get rank of particular process\n\
+    PID = os.getpid()\n\
+    print(f'Worker {rank}/{size} (PID: {PID}) says Hello World')" > /home/test_user/lab4/hello_world_mpi.py

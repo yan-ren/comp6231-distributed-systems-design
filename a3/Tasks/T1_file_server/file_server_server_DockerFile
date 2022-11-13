@@ -1,0 +1,20 @@
+FROM python:3.8
+
+ENV WORK_DIR=/home/server
+# set work directory
+RUN mkdir -p $WORK_DIR
+# where your code lives
+WORKDIR $WORK_DIR
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# copy project
+COPY server $WORK_DIR/
+COPY server.py $WORK_DIR
+
+EXPOSE 65432
+
+RUN cd $WORK_DIR
+CMD ["python", "server.py"]
