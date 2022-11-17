@@ -8,7 +8,7 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-dataset = '~/Combined_Flights_2021.csv'
+dataset = './Combined_Flights_2021.csv'
 
 if rank == 0:
     """
@@ -18,7 +18,6 @@ if rank == 0:
     def load_data_in_chunks(data: str, chucks: int = 4) -> list:
         df = pd.read_csv(data)
         return np.array_split(df, chucks)
-
 
     def reduce_task(mapping_output: list):
         df = pd.DataFrame()

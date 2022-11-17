@@ -1,3 +1,4 @@
+import time
 import pandas as pd
 import numpy as np
 from mpi4py import MPI
@@ -6,7 +7,7 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-dataset = '~/Combined_Flights_2021.csv'
+dataset = './Combined_Flights_2021.csv'
 
 if rank == 0:
     """
@@ -17,13 +18,13 @@ if rank == 0:
         df = pd.read_csv(data)
         return np.array_split(df, chucks)
 
-
     def reduce_task(mapping_output: list):
         total = 0
         for out in mapping_output:
             total += out
         print('Flights were diverted between the period of 20th-30th November 2021:', total)
 
+    start_time = time.time()
 
     slave_workers = size - 1
     chunk_distribution = load_data_in_chunks(dataset, slave_workers)
@@ -41,12 +42,14 @@ if rank == 0:
         print(f'received from Worker slave {worker}')
 
     reduce_task(results)
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
 elif rank > 0:
     data = comm.recv()
     print(f'Worker {rank} is assigned chunk {data.size} {dataset}')
-    data = data[(data['Year'] == 2021) & (data['Month'] == 9) & (20 <= data['DayofMonth']) & (data['DayofMonth'] >= 30) & (data['Diverted'] == True)]
+    data = data[(data['Year'] == 2021) & (data['Month'] == 9) & (
+        20 <= data['DayofMonth']) & (data['DayofMonth'] >= 30) & (data['Diverted'] == True)]
     result = len(data.index)
     print(f'Worker slave {rank} is done. Sending back to master')
     comm.send(result, dest=0)

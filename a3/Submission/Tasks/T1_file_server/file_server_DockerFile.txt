@@ -1,0 +1,59 @@
+----------
+Docker commands
+----------
+docker build -t server -f file_server_server_DockerFile .
+
+docker run -d -p 65432:65432 server
+
+docker build -t client -f file_server_client_DockerFile .
+
+docker run -i --net=host client
+docker run -i --net=host client
+docker run -i --net=host client
+
+----------
+file_server_server_DockerFile
+----------
+FROM python:3.8
+
+ENV WORK_DIR=/home/server
+# set work directory
+RUN mkdir -p $WORK_DIR
+# where your code lives
+WORKDIR $WORK_DIR
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# copy project
+COPY server $WORK_DIR/
+COPY server.py $WORK_DIR
+
+EXPOSE 65432
+
+RUN cd $WORK_DIR
+CMD ["python", "server.py"]
+
+----------
+file_server_client_DockerFile
+----------
+FROM python:3.8
+
+ENV WORK_DIR=/home/client
+# set work directory
+RUN mkdir -p $WORK_DIR
+# where your code lives
+WORKDIR $WORK_DIR
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# copy project
+COPY client.py $WORK_DIR
+
+EXPOSE 65432
+
+RUN cd $WORK_DIR
+CMD ["python", "client.py"]

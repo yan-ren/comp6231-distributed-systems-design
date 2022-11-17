@@ -1,3 +1,4 @@
+import time
 import pandas as pd
 import numpy as np
 from mpi4py import MPI
@@ -6,7 +7,7 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-dataset = '~/Combined_Flights_2021.csv'
+dataset = './Combined_Flights_2021.csv'
 
 if rank == 0:
     """
@@ -17,7 +18,6 @@ if rank == 0:
         df = pd.read_csv(data)
         return np.array_split(df, chucks)
 
-
     def reduce_task(mapping_output: list):
         reduce_out = {}
         for out in mapping_output:
@@ -27,8 +27,10 @@ if rank == 0:
                 else:
                     reduce_out[key] = value
         print(reduce_out)
-        print('Airline had the most canceled flights in September 2021', max(reduce_out, key=reduce_out.get))
+        print('Airline had the most canceled flights in September 2021',
+              max(reduce_out, key=reduce_out.get))
 
+    start_time = time.time()
 
     slave_workers = size - 1
     chunk_distribution = load_data_in_chunks(dataset, slave_workers)
@@ -46,12 +48,14 @@ if rank == 0:
         print(f'received from Worker slave {worker}')
 
     reduce_task(results)
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
 elif rank > 0:
     df = comm.recv()
     print(f'Worker {rank} is assigned chunk {df.size} {dataset}')
-    data = df[(df['Year'] == 2021) & (df['Month'] == 9) & (df['Cancelled'] == True)]
+    data = df[(df['Year'] == 2021) & (df['Month'] == 9)
+              & (df['Cancelled'] == True)]
     result = data.iloc[:, 1:2].value_counts()
     print(f'Worker slave {rank} is done. Sending back to master')
     comm.send(result, dest=0)

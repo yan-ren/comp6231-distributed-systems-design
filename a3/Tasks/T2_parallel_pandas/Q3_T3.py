@@ -8,7 +8,7 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-dataset = '~/Combined_Flights_2021.csv'
+dataset = './Combined_Flights_2021.csv'
 
 if rank == 0:
     """
@@ -19,7 +19,6 @@ if rank == 0:
         df = pd.read_csv(data)
         return np.array_split(df, chucks)
 
-
     def reduce_task(mapping_output: list):
         total_count = 0
         total_time = 0
@@ -27,7 +26,8 @@ if rank == 0:
             for key, value in out.items():
                 total_count += key
                 total_time += value
-        print('Average airtime for flights that were flying from Nashville to Chicago:', total_time / total_count)
+        print('Average airtime for flights that were flying from Nashville to Chicago:',
+              total_time / total_count)
 
     start_time = time.time()
 
@@ -53,7 +53,8 @@ if rank == 0:
 elif rank > 0:
     data = comm.recv()
     # print(f'Worker {rank} is assigned chunk {data.size} {dataset}')
-    data = data[(data['OriginCityName'] == 'Nashville, TN') & (data['DestCityName'] == 'Chicago, IL')]
+    data = data[(data['OriginCityName'] == 'Nashville, TN')
+                & (data['DestCityName'] == 'Chicago, IL')]
     result = {len(data.index): data['AirTime'].sum()}
     print(f'Worker slave {rank} is done. Sending back to master')
     comm.send(result, dest=0)

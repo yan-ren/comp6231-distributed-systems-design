@@ -1,0 +1,30 @@
+docker pull husseinabdallah2/mpi4py-cluster:master
+
+docker run -dit husseinabdallah2/mpi4py-cluster:master
+docker run -dit husseinabdallah2/mpi4py-cluster:master
+docker run -dit husseinabdallah2/mpi4py-cluster:master
+docker run -dit husseinabdallah2/mpi4py-cluster:master
+
+docker exec -it <master_container_id> /bin/bash
+
+Create machinefile at path ~/ with the IP addresses of all nodes
+
+ssh-keygen -t rsa​
+
+sh-copy-id -i ~/.ssh/id_rsa.pub root@<worker_container_ip> ​ for each worker node
+
+docker exec -it <worker_container_id> /bin/bash
+
+service ssh start​
+
+nano /etc/hosts
+
+# add following
+172.17.0.2  250ae9b27c01
+
+docker cp . crazy_ride:/root/
+docker cp . pensive_jemison:/root/
+docker cp . heuristic_golick:/root/
+docker cp . elegant_kapitsa:/root/
+
+mpiexec -n 3 -machinefile ~/machinefile python -m <your_mpi_script>.py​
