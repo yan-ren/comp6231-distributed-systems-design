@@ -13,7 +13,7 @@ import pandas as pd
 
 def task(data: pd.DataFrame):
     data = data[(data['Year'] == 2021) & (data['Month'] == 9) & (
-        20 <= data['DayofMonth']) & (data['DayofMonth'] >= 30) & (data['Diverted'] == True)]
+        20 <= data['DayofMonth']) & (data['DayofMonth'] <= 30) & (data['Diverted'] == True)]
     return len(data.index)
 
 
