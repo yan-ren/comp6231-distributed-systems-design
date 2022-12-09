@@ -7,7 +7,7 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-dataset = './Combined_Flights_2021.csv'
+dataset = './Combined_Flights_2021_small.csv'
 
 if rank == 0:
     """
@@ -48,8 +48,8 @@ if rank == 0:
 elif rank > 0:
     data = comm.recv()
     print(f'Worker {rank} is assigned chunk {data.size} {dataset}')
-    data = data[(data['Year'] == 2021) & (data['Month'] == 9) & (
-        20 <= data['DayofMonth']) & (data['DayofMonth'] >= 30) & (data['Diverted'] == True)]
+    data = data[(data['Year'] == 2021) & (data['Month'] == 11) & (
+        20 <= data['DayofMonth']) & (data['DayofMonth'] <= 30) & (data['Diverted'] == True)]
     result = len(data.index)
     print(f'Worker slave {rank} is done. Sending back to master')
     comm.send(result, dest=0)

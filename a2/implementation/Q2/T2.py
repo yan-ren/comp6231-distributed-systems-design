@@ -13,7 +13,7 @@ import pandas as pd
 
 def task(data: pd.DataFrame):
     # print(data.dtypes)
-    data = data[(data['Year'] == 2021) & (data['Month'] == 9) & (20 <= data['DayofMonth']) & (data['DayofMonth'] >= 30) & (data['Diverted'] == True)]
+    data = data[(data['Year'] == 2021) & (data['Month'] == 11) & (20 <= data['DayofMonth']) & (data['DayofMonth'] <= 30) & (data['Diverted'] == True)]
     return len(data.index)
 
 
@@ -32,7 +32,7 @@ def reduce_task(mapping_output: list):
 if __name__ == '__main__':
     process_num = 4
     # Combined_Flights_2021
-    data_frame = load_data_in_chunks('../datasets/Combined_Flights_2021.csv', process_num)
+    data_frame = load_data_in_chunks('../datasets/Combined_Flights_2021_small.csv', process_num)
     results = []
     with concurrent.futures.ProcessPoolExecutor(max_workers=process_num) as executor:
         future_list = [executor.submit(task, df) for df in data_frame]

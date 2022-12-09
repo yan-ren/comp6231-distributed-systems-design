@@ -8,7 +8,7 @@ comm = MPI.COMM_WORLD
 size = comm.Get_size()
 rank = comm.Get_rank()
 
-dataset = './Combined_Flights_2021.csv'
+dataset = './Combined_Flights_2021_small.csv'
 
 if rank == 0:
     """

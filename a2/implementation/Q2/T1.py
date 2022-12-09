@@ -12,7 +12,7 @@ import pandas as pd
 
 
 def task(data: pd.DataFrame):
-    data = data[(data['Year'] == 2021) & (data['Month'] == 9) & (
+    data = data[(data['Year'] == 2021) & (data['Month'] == 11) & (
         20 <= data['DayofMonth']) & (data['DayofMonth'] <= 30) & (data['Diverted'] == True)]
     return len(data.index)
 
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     threads = 10
     # Combined_Flights_2021
     data_frame = load_data_in_chunks(
-        '../datasets/Combined_Flights_2021.csv', threads)
+        '../datasets/Combined_Flights_2021_small.csv', threads)
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as executor:
         future_list = [executor.submit(task, df) for df in data_frame]

@@ -33,10 +33,10 @@ def restaurant_shift_coworkers(worker_shifts: RDD) -> RDD:
             return res
 
 
-    worker_split = worker_shifts.map(lambda x: (x.split(",")[1], x.split(",")[0]))
-    worker_grouped = worker_split.reduceByKey(lambda a, b: a + "," + b)
-    worker_paired =  worker_grouped.flatMap(pair)
-    worker_paired = worker_paired.reduceByKey(lambda a, b: a+b)
+    worker_split = worker_shifts.map(lambda x: (x.split(",")[1], x.split(",")[0])) # [(date, name)]
+    worker_grouped = worker_split.reduceByKey(lambda a, b: a + "," + b) # [(date, 'name,name,name')]
+    worker_paired =  worker_grouped.flatMap(pair) # [(('name', 'name'), 1)]
+    worker_paired = worker_paired.reduceByKey(lambda a, b: a+b) # [(('name', 'name'), int)]
     worker_paired_sorted = worker_paired.sortBy(lambda x: x[1], ascending=False)
     # print(worker_paired_sorted.collect())
     return worker_paired_sorted
@@ -63,7 +63,7 @@ def air_flights_diverted_flights(flights: DataFrame) -> int:
     :param flights: Spark DataFrame of the flights CSV file.
     :return: The number of diverted flights between 20-30 Nov. 2021.
     """
-    return flights.filter((flights.Year == 2021) & (flights.Month == 9) & (flights.DayofMonth >= 20) & (flights.DayofMonth <= 30) & (flights.Diverted)).count()
+    return flights.filter((flights.Year == 2021) & (flights.Month == 11) & (flights.DayofMonth >= 20) & (flights.DayofMonth <= 30) & (flights.Diverted)).count()
 
 
 def air_flights_avg_airtime(flights: DataFrame) -> float:
@@ -108,7 +108,7 @@ def main():
     print('########################## Problem 2 ########################')
     # problem 2: PySpark DataFrame operations
     # read the file
-    flights = spark.read.csv('Combined_Flights_2021.csv', header=True, inferSchema=True)
+    flights = spark.read.csv('Combined_Flights_2021_small.csv', header=True, inferSchema=True)
     print('Q1:', air_flights_most_canceled_flights(flights), 'had the most canceled flights in September 2021.')
     print('Q2:', air_flights_diverted_flights(flights), 'flights were diverted between the period of 20th-30th '
                                                        'November 2021.')
